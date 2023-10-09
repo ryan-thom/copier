@@ -1,4 +1,5 @@
 import platform
+import re
 import stat
 import sys
 from contextlib import nullcontext as does_not_raise
@@ -520,7 +521,12 @@ def test_value_with_forward_slash(tmp_path_factory: pytest.TempPathFactory) -> N
                 "choices": [1, ["2", {"value": None, "validator": "disabled"}], 3],
             },
             "2",
-            pytest.raises(ValueError, match="Invalid choice: disabled"),
+            pytest.raises(
+                ValueError,
+                match=re.escape(
+                    '"2" is a disabled choice for question "q": disabled. Valid choices are [1, 3].'
+                ),
+            ),
         ),
         (
             {"type": "int", "choices": {"one": 1, "two": 2, "three": 3}},
@@ -559,7 +565,12 @@ def test_value_with_forward_slash(tmp_path_factory: pytest.TempPathFactory) -> N
                 },
             },
             "2",
-            pytest.raises(ValueError, match="Invalid choice: disabled"),
+            pytest.raises(
+                ValueError,
+                match=re.escape(
+                    '"2" is a disabled choice for question "q": disabled. Valid choices are [1, 3].'
+                ),
+            ),
         ),
         (
             {"type": "str", "choices": {"one": None, "two": None, "three": None}},
@@ -643,7 +654,12 @@ def test_value_with_forward_slash(tmp_path_factory: pytest.TempPathFactory) -> N
                 },
             },
             "key: value",
-            pytest.raises(ValueError, match="Invalid choice: disabled"),
+            pytest.raises(
+                ValueError,
+                match=re.escape(
+                    "\"{'key': 'value'}\" is a disabled choice for question \"q\": disabled. Valid choices are []."
+                ),
+            ),
         ),
         (
             {"type": "yaml", "choices": {"complex": {"key": "value"}}},
@@ -686,7 +702,12 @@ def test_value_with_forward_slash(tmp_path_factory: pytest.TempPathFactory) -> N
                 ],
             },
             "key: value",
-            pytest.raises(ValueError, match="Invalid choice: disabled"),
+            pytest.raises(
+                ValueError,
+                match=re.escape(
+                    "\"{'key': 'value'}\" is a disabled choice for question \"q\": disabled. Valid choices are []."
+                ),
+            ),
         ),
         (
             {"type": "yaml", "choices": [["complex", {"key": "value"}]]},

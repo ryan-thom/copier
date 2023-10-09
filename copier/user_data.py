@@ -21,7 +21,7 @@ from pydantic_core.core_schema import ValidationInfo
 from pygments.lexers.data import JsonLexer, YamlLexer
 from questionary.prompts.common import Choice
 
-from .errors import InvalidTypeError, UserMessageError
+from .errors import InvalidChoiceError, InvalidTypeError, UserMessageError
 from .tools import cast_to_bool, cast_to_str, force_str_end
 from .types import MISSING, AnyByStrDict, MissingType, OptStr, OptStrOrPath, StrOrPath
 
@@ -417,21 +417,24 @@ class Question:
         except UndefinedError as error:
             raise UserMessageError(str(error)) from error
 
-    def parse_answer(self, answer: Any) -> Any:
+    def parse_answer(self, raw_answer: Any) -> Any:
         """Parse the answer according to the question's type."""
-        ans = self.cast_answer(answer)
+        cast_answer = self.cast_answer(raw_answer)
         choices = self._formatted_choices
         if not choices:
-            return ans
+            return cast_answer
         choice_error = ""
         for choice in choices:
-            if ans == self.cast_answer(choice.value):
+            if cast_answer == self.cast_answer(choice.value):
                 if not choice.disabled:
-                    return ans
+                    return cast_answer
                 if not choice_error:
                     choice_error = choice.disabled
-        raise ValueError(
-            f"Invalid choice: {choice_error}" if choice_error else "Invalid choice"
+
+        # At this point, the answer is invalid; it did not match any choice or it matched a disabled choice.
+        raise InvalidChoiceError(
+            f'"{cast_answer}" is {"a disabled" if choice_error else "an invalid"} choice for question "{self.var_name}"'
+            f'{f": {choice_error}" if choice_error else ""}. Valid choices are {list(set(enabled.value for enabled in choices if not enabled.disabled))}.'
         )
 
 

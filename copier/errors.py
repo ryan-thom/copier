@@ -50,6 +50,10 @@ class InvalidTypeError(TypeError, CopierError):
     """The question type is not among the supported ones."""
 
 
+class InvalidChoiceError(ValueError, CopierError):
+    """The given answer either does not match a choice or matches a disabled choice."""
+
+
 class PathError(CopierError, ValueError):
     """The path is invalid in the given context."""
 
